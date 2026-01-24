@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema(
     taskLimitYear: { type: Number, default: 200 },
     tasksCreatedThisYear: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    isEmailVerified: { type: Boolean, default: false },
+
+    refreshTokenId: { type: String, select: false },
+    refreshTokenExpiresAt: { type: Date, select: false },
+
+    otpCodeHash: { type: String, select: false },
+    otpExpiresAt: { type: Date, select: false },
+    otpAttempts: { type: Number, default: 0, select: false },
 
     passwordChangedAt: Date
   },

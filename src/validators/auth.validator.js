@@ -19,3 +19,18 @@ export const updatePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
   newPassword: Joi.string().min(6).required()
 });
+
+export const refreshTokenSchema = Joi.object({
+  refreshToken: Joi.string().optional()
+});
+
+export const requestOtpSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+
+export const verifyOtpSchema = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string()
+    .pattern(/^[0-9]{6}$/)
+    .required()
+});

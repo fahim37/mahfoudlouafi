@@ -11,11 +11,19 @@
       "value": "http://localhost:5000"
     },
     {
-      "key": "token",
+      "key": "accessToken",
       "value": ""
     },
     {
-      "key": "adminToken",
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminRefreshToken",
       "value": ""
     },
     {
@@ -36,7 +44,7 @@
     "bearer": [
       {
         "key": "token",
-        "value": "{{token}}",
+        "value": "{{accessToken}}",
         "type": "string"
       }
     ]
@@ -115,9 +123,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
-                  "if (json && json.token) {",
-                  "  pm.collectionVariables.set(\"token\", json.token);",
-                  "}"
+                  "if (json?.accessToken) pm.collectionVariables.set(\"accessToken\", json.accessToken);",
+                  "if (json?.refreshToken) pm.collectionVariables.set(\"refreshToken\", json.refreshToken);"
                 ]
               }
             }
@@ -166,13 +173,159 @@
                 "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
-                  "if (json && json.token) {",
-                  "  pm.collectionVariables.set(\"token\", json.token);",
-                  "}"
+                  "if (json?.accessToken) pm.collectionVariables.set(\"accessToken\", json.accessToken);",
+                  "if (json?.refreshToken) pm.collectionVariables.set(\"refreshToken\", json.refreshToken);"
                 ]
               }
             }
           ]
+        },
+        {
+          "name": "Refresh Tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Uses stored refreshToken (or cookie) to rotate access and refresh tokens."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.accessToken) pm.collectionVariables.set(\"accessToken\", json.accessToken);",
+                  "if (json?.refreshToken) pm.collectionVariables.set(\"refreshToken\", json.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Clears refresh token server-side and cookie. Requires access token."
+          }
+        },
+        {
+          "name": "Request OTP (email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/request-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "request-otp"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser1@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sends a 6-digit OTP email (styled to the Tully palette). SMTP must be configured."
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser1@example.com\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Verifies the OTP code for the user. Marks email as verified."
+          }
         },
         {
           "name": "Get Me",
@@ -225,7 +378,7 @@
                 }
               }
             },
-            "description": "Updates password and returns a fresh JWT (collection variable token is updated)."
+            "description": "Updates password and returns fresh access/refresh tokens (collection variables updated)."
           },
           "event": [
             {
@@ -234,16 +387,15 @@
                 "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
-                  "if (json && json.token) {",
-                  "  pm.collectionVariables.set(\"token\", json.token);",
-                  "}"
+                  "if (json?.accessToken) pm.collectionVariables.set(\"accessToken\", json.accessToken);",
+                  "if (json?.refreshToken) pm.collectionVariables.set(\"refreshToken\", json.refreshToken);"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Login (Admin) - sets adminToken",
+          "name": "Login (Admin) - sets adminAccessToken",
           "request": {
             "method": "POST",
             "header": [
@@ -277,7 +429,7 @@
                 }
               }
             },
-            "description": "You must create an admin user (role=admin) in DB first. This request stores token in `adminToken`."
+            "description": "You must create an admin user (role=admin) in DB first. Stores access token in `adminAccessToken`."
           },
           "event": [
             {
@@ -286,9 +438,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
-                  "if (json && json.token) {",
-                  "  pm.collectionVariables.set(\"adminToken\", json.token);",
-                  "}"
+                  "if (json?.accessToken) pm.collectionVariables.set(\"adminAccessToken\", json.accessToken);",
+                  "if (json?.refreshToken) pm.collectionVariables.set(\"adminRefreshToken\", json.refreshToken);"
                 ]
               }
             }
@@ -681,7 +832,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{adminToken}}",
+                  "value": "{{adminAccessToken}}",
                   "type": "string"
                 }
               ]
@@ -695,7 +846,7 @@
                 }
               }
             },
-            "description": "Requires an ADMIN user token. Put an admin JWT into collection variable `adminToken`."
+            "description": "Requires an ADMIN user token. Put an admin JWT into collection variable `adminAccessToken`."
           },
           "event": [
             {
@@ -738,7 +889,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{adminToken}}",
+                  "value": "{{adminAccessToken}}",
                   "type": "string"
                 }
               ]
@@ -752,7 +903,7 @@
                 }
               }
             },
-            "description": "Requires ADMIN token and uses `planId`."
+            "description": "Requires ADMIN access token (`adminAccessToken`) and uses `planId`."
           }
         },
         {
@@ -777,12 +928,12 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{adminToken}}",
+                  "value": "{{adminAccessToken}}",
                   "type": "string"
                 }
               ]
             },
-            "description": "Requires ADMIN token and uses `planId`."
+            "description": "Requires ADMIN access token (`adminAccessToken`) and uses `planId`."
           }
         }
       ]
